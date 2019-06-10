@@ -7,21 +7,28 @@ mizy tools collection
 + tools/mizy_up		- setup usb otg network to device, without dhcp
 + tools/mizy_shell	- ssh automate script
 
-# simple usage example
+# simple example 1
+
+boot any mizy images without write it to storage sd/mmc/spi just via usb FEL mode
+yeah!!! its cool, quick and very easy!
 
 ```
-# extract downloaded mizy image
+# extract any downloaded mizy image
+
 cd bin
 ../tools/hybrid *.bin extract
 cd ..
 
 # fel boot this image
+
 tools/fel_full_boot
 
 # setup usb network ( if not dhcp auto configured by system )
+
 tools/mizy_up
 
-# ssh login
+# ssh login to device
+
 tools/mizy_shell
 
 # ok!
