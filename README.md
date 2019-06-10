@@ -4,10 +4,10 @@
 
 mizy tools collection
 
-+ tools/fel_full_boot	- boot via FEL mode 
-+ tools/hybrid		- mizy image army knife 
-+ tools/mizy_up		- setup usb otg network to device, without dhcp
-+ tools/mizy_shell	- ssh automate script
++ tools/`fel_full_boot`	- boot via FEL mode 
++ tools/`hybrid`		- mizy image army knife 
++ tools/`mizy_up`		- setup usb otg network to device, without dhcp
++ tools/`mizy_shell`	- ssh automate script
 + tools/.*		- just for me git usage
 
 # simple example 1
