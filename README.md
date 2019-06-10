@@ -6,6 +6,7 @@ mizy tools collection
 + tools/hybrid		- mizy image army knife 
 + tools/mizy_up		- setup usb otg network to device, without dhcp
 + tools/mizy_shell	- ssh automate script
++ tools/.*		- just for me git usage
 
 # simple example 1
 
