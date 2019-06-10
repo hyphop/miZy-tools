@@ -54,6 +54,6 @@ FEL mode activation
 
 + started automatically if not have any other bootable source
 + on active mizy `fel_boot_write yes` - setup FEL boot from sd
-+ if u have any bootable source u can write by zero first 8192 bytes
++ if u have any bootable source u can write it by zero first 8192 bytes, or just remove it
 + sunxi-fel source https://github.com/hyphop/sunxi-tools
 
