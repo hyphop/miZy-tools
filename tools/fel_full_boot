@@ -6,8 +6,8 @@
 # http://linux-sunxi.org/FEL/USBBoot
 
 [ "$LOOP" ] || LOOP=1
-[ "$LOOP" = "0"] || LOOP=
-[ "$LOOP" = "no"] || LOOP=
+[ "$LOOP" = "0" ] && LOOP=
+[ "$LOOP" = "no" ] && LOOP=
 
 scriptaddr=0x43100000
 envaddr=0x43101000
@@ -48,12 +48,8 @@ envfile="share/boot.fel.env"
 
 usbid="1f3a:efe8"
 
-echo $cmd
-
-#./boot.fel.make \
-#    bin/orangepizero.update
-
 s=0
+
 for c in  $uboot  $script $initrd  $kernel  $fdt  $envfile; do
 	[ -f "$c" ] || {
 		echo "[e] $c - file not found"
@@ -83,7 +79,10 @@ uboot="$uboot.trunc"
 
 # try sunxi_fel
 
-for sunxi_fel in ../sunxi-tools/sunxi-fel sunxi-fel ""; do
+for sunxi_fel in \
+    ../sunxi-tools/sunxi-fel \
+    sunxi-fel \
+    ""; do
 #    echo "[i] try $sunxi_fel"
     which "$sunxi_fel" && {
     break
@@ -95,6 +94,14 @@ done
     exit 1
 }
 
+# try to get super user privs
+for sudo in runas sudo ""; do
+    which $sudo 2>/dev/null 1>/dev/null & break
+done
+
+# some clear ?
+sunxi_fel=$(which $sunxi_fel)
+
 cmd="$sunxi_fel -p -v uboot $uboot	\
              write ${scriptaddr} $script	\
              write ${ramdisk_addr_r} $initrd	\
@@ -105,7 +112,10 @@ cmd="$sunxi_fel -p -v uboot $uboot	\
 #             write ${fdt_addr_lzma} $fdtlzma	\
 #             write ${splash_addr} $splash	\
 
-while [ "$LOOP" ]; do
+
+echo "[i] loop mode is $LOOP">&2
+
+while [ "1" ]; do
 
 	grep -q "1f3a" /sys/bus/usb/devices/*/idVendor && \
 	grep -q "efe8" /sys/bus/usb/devices/*/idProduct || {
@@ -116,11 +126,13 @@ while [ "$LOOP" ]; do
 
 #   lsusb | grep $usbid 1>/dev/null 2>/dev/null || continue;
 
-	echo "FEL CMD: " $cmd
+    echo "FEL CMD: " $cmd
 
-    $cmd
+    $sudo $cmd
 
-	sleep 1
+    [ "$LOOP" ] || break
+
+    sleep 1
 
 done
 

@@ -1,0 +1,51 @@
+#!/bin/sh
+
+## hyphop ##
+
+## usage serial UART via screen
+
+B=115200
+
+for dev in \
+    /dev/serial/by-id/usb-Prolific*-port0 \
+    /dev/serial/by-id/usb-FTDI*-port0 \
+    /dev/ttyUSB0 \
+    ""; do
+
+    [ -c $dev ] && {
+	break
+    }
+
+done
+
+
+    [ "$dev" ] || {
+	echo "[w] usb UART device not found">&2
+	exit 1
+    }
+
+# try to get super user privs
+for sudo in runas sudo ""; do
+    which $sudo 2>/dev/null 1>/dev/null & break
+done
+
+#
+## check another copy 
+#
+#$sudo lsof -c screen | grep /dev/ttyUSB 2>/dev/null && {
+#    echo "[w] already usage ">&2
+#    exit 1
+#}
+
+echo "[i] use $dev">&2
+
+
+while [ "1" ] ; do 
+    cmd="$sudo $(which screen) $dev $B"
+    echo "# $cmd">&2
+    echo "# stop and exit screen by Crtl+a Ctrl+K y & Crtl + C - stop loop">&2
+    echo "# wait 5 sec for read this and run">&2
+    sleep 5
+    $cmd
+done
+
