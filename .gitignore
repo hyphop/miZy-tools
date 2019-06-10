@@ -1,0 +1,8 @@
+logs
+*.notready
+tmp/*
+out/*
+bin/*
+git_*
+#syncit*
+rel

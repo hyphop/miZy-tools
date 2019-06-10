@@ -1,0 +1,52 @@
+#!/bin/sh
+
+## hyphop ##
+
+# setup usb otg network
+
+DEV=usb0
+
+# try to get super user privs
+for sudo in runas sudo ""; do
+    which $sudo 2>/dev/null 1>/dev/null & break
+done
+
+#grep "miZy" /sys/bus/usb/devices/usb2/driver/1-6/manufacturer | while read l ; do
+grep -q "miZy" /sys/bus/usb/devices/usb?/driver/*/manufacturer || {
+    echo "[w] not found active mizy devices on usb ports ">&2
+    echo "[i] try again later or check usb connection">&2
+    echo "[i] wait device only in usb otg mode">&2
+    exit 1
+}
+
+grep "miZy" /sys/bus/usb/devices/usb?/driver/*/manufacturer | while read l ; do
+
+    echo "[i] $l">&2
+    l=${l#*:}
+    DEVIP=${l%:*}
+    HOSTIP=${l#$DEVIP:}
+    DEVIP=${DEVIP#*:}
+    echo "[i] setup usb network - host: $HOSTIP dev: $DEVIP"
+    cmd="$(which ifconfig) $DEV $HOSTIP netmask 255.255.255.0"
+    echo "# $sudo $cmd"
+    $sudo $cmd
+
+    ping -c1 $DEVIP  >/dev/null 2>/dev/null || {
+	echo "[w] ping to $DEV error">&2
+    }
+
+    echo "[i] mizy device available via usb IP: $DEVIP"
+    printf "$DEVIP" > /tmp/mizy_usb_ip
+
+    ## resolver
+    ## echo nameserver $DEVIP > /tmp/resolv.conf
+    ##
+
+    ## only one try & exit 
+    exit 0
+    
+
+done
+
+#:miZy:172.22.1.1:172.22.1.2
+

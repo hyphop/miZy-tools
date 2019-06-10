@@ -1,0 +1,15 @@
+#!/bin/sh
+
+## hyphop ##
+
+# simple automate ssh shell access for mizy
+
+[ "$DEVIP" ] || DEVIP=$(cat /tmp/mizy_usb_ip)
+
+CONF=$(dirname $0)/../share/ssh.config
+
+echo "[i] mizy usb ip: $DEVIP" >&2
+
+echo "# ssh -F $CONF root@$DEVIP">&2
+
+ssh -q -F $CONF root@$DEVIP

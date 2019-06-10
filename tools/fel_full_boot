@@ -1,0 +1,126 @@
+#!/bin/sh
+
+## hyphop ## 
+
+# FEL / SPL boot via usb-otg 
+# http://linux-sunxi.org/FEL/USBBoot
+
+[ "$LOOP" ] || LOOP=1
+[ "$LOOP" = "0"] || LOOP=
+[ "$LOOP" = "no"] || LOOP=
+
+scriptaddr=0x43100000
+envaddr=0x43101000
+kernel_addr_r=0x42000000
+#kernel_addr_r=0x44400000
+ramdisk_addr_r=0x43300000
+fdt_addr_r=0x43000000
+fdt_addr_lzma=0x43200000
+
+help="
+find ../bin/extracted/* 
+../bin/extracted/0-header_mmc
+../bin/extracted/1-uboot
+../bin/extracted/2-script
+../bin/extracted/3-dtb
+../bin/extracted/4-kernel
+../bin/extracted/5-initrd
+../bin/extracted/6-user
+"
+
+DIR=bin/extracted
+
+fdt=$DIR/3-dtb
+uboot=$DIR/1-uboot
+initrd=$DIR/5-initrd
+script=$DIR/2-script
+kernel=$DIR/4-kernel
+
+UBOOT_SIZE=464423
+fel_scriptaddr=0x43100000
+
+splash_addr=0x43110000
+splash=hyphop2r.png.b.raw.i2c
+splash=miZero.128x64.i2c
+splash=,out/splash.bin
+
+envfile="share/boot.fel.env"
+
+usbid="1f3a:efe8"
+
+echo $cmd
+
+#./boot.fel.make \
+#    bin/orangepizero.update
+
+s=0
+for c in  $uboot  $script $initrd  $kernel  $fdt  $envfile; do
+	[ -f "$c" ] || {
+		echo "[e] $c - file not found"
+		exit 0;
+	}
+	[ -s "$c" ] || {
+		echo "[e] $c - empty file"
+		exit 0;
+	}
+	[ "$c" ] || {
+		echo "[e] undef $c"
+		exit 0;
+	}
+	S=$(stat -L -c%s $c)
+	s=$((s+S))
+
+	echo ">>$c\t$S bytes"
+
+done
+	echo "=========\nUPLOAD: $s"
+
+## need remove gurb from tail 
+
+dd if=$uboot bs=$UBOOT_SIZE count=1 of=$uboot.trunc
+
+uboot="$uboot.trunc"
+
+# try sunxi_fel
+
+for sunxi_fel in ./tools/sunxi-fel sunxi-fel ""; do
+#    echo "[i] try $sunxi_fel"
+    which "$sunxi_fel" && {
+    break
+    }
+done
+
+[ "$sunxi_fel" ] || {
+    echo "[e] try to install sunxi-tools" >&2
+    exit 1
+}
+
+cmd="$sunxi_fel -p -v uboot $uboot	\
+             write ${scriptaddr} $script	\
+             write ${ramdisk_addr_r} $initrd	\
+             write ${kernel_addr_r} $kernel	\
+             write ${fdt_addr_r} $fdt		\
+             write ${envaddr} $envfile		\
+"
+#             write ${fdt_addr_lzma} $fdtlzma	\
+#             write ${splash_addr} $splash	\
+
+while [ "$LOOP" ]; do
+
+	grep -q "1f3a" /sys/bus/usb/devices/*/idVendor && \
+	grep -q "efe8" /sys/bus/usb/devices/*/idProduct || {
+		printf "[i] $(date) WAIT usb device id $usbid\r"
+		sleep 1
+		continue;
+	}
+
+#   lsusb | grep $usbid 1>/dev/null 2>/dev/null || continue;
+
+	echo "FEL CMD: " $cmd
+
+    $cmd
+
+	sleep 1
+
+done
+
