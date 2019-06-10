@@ -13,10 +13,12 @@ mizy tools collection
 
 # install miZy-tools
 
+```
 mkdir /tmp/mizy_examples
 cd /tmp/mizy_examples
 git clone https://github.com/hyphop/miZy-tools
 ./prepare
+```
 
 # simple examples #1
 
