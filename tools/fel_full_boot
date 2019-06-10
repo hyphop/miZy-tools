@@ -83,7 +83,7 @@ uboot="$uboot.trunc"
 
 # try sunxi_fel
 
-for sunxi_fel in ./tools/sunxi-fel sunxi-fel ""; do
+for sunxi_fel in ../sunxi-tools/sunxi-fel sunxi-fel ""; do
 #    echo "[i] try $sunxi_fel"
     which "$sunxi_fel" && {
     break
