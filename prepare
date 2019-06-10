@@ -1,0 +1,11 @@
+#!/bin/sh
+
+## hyphop ##
+
+# prepare sunxi tools
+
+cd ..
+
+git clone https://github.com/hyphop/sunxi-tools
+cd sunxi-tools
+make

@@ -11,7 +11,14 @@ mizy tools collection
 + tools/`serial`	- automate serial UART console access
 + tools/.*		- just for me git usage
 
-# simple example 1
+# install miZy-tools
+
+mkdir /tmp/mizy_examples
+cd /tmp/mizy_examples
+git clone https://github.com/hyphop/miZy-tools
+./prepare
+
+# simple examples #1
 
 boot any mizy images without write it to storage sd/mmc/spi just via usb FEL mode
 yeah!!! its cool, quick and very easy!
