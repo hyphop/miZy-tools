@@ -1,5 +1,7 @@
 # miZy-tools
 
+![miZy - tools](pics/mizy_tools.gif)
+
 mizy tools collection
 
 + tools/fel_full_boot	- boot via FEL mode 
