@@ -1,0 +1,54 @@
+#!/bin/sh
+
+## hyphop ##
+
+# simple automate ssh write image 
+
+D=$(dirname $0)
+
+[ "$REBOOT" ] || REBOOT=
+
+for i in "$@"; do
+    case "$i" in
+	--reboot|-r)
+	REBOOT=-r
+	;;
+	*)
+	[ -s "$i" ] && {
+	    IMG="$i"
+	}
+	;;
+    esac
+done
+
+[ -s "$IMG" ] || {
+    echo "# image '$IMG' not defined or not found">&2
+    exit 1
+}
+
+DEV=usb0
+
+[ "$DEVIP" ] || DEVIP=$(cat /tmp/mizy_usb_ip 2>/dev/null)
+[ "$DEVIP" ] || {
+    for DEVIP in $(ip -4 addr show $DEV | grep -m1 -o -P \\d\+\.\\d\+\.\\d\+\.\\d\+); do
+	break
+    done
+}
+
+CONF=$(dirname $0)/../share/ssh.config
+
+burn=image_write_sd
+
+echo "[i] mizy usb ip: $DEVIP" >&2
+
+echo "[i] copy image "$IMG" => ssh root@$DEVIP">&2
+
+scp -F $CONF "$IMG" "$D/$burn" root@$DEVIP:/tmp && {
+
+    F="$(basename $IMG)"
+    
+    echo "[i] write image '$F'">&2
+
+    ssh -q -F $CONF root@$DEVIP /tmp/$burn /tmp/$F safe $REBOOT
+
+}

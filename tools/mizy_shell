@@ -4,7 +4,14 @@
 
 # simple automate ssh shell access for mizy
 
-[ "$DEVIP" ] || DEVIP=$(cat /tmp/mizy_usb_ip)
+DEV=usb0
+
+[ "$DEVIP" ] || DEVIP=$(cat /tmp/mizy_usb_ip 2>/dev/null)
+[ "$DEVIP" ] || {
+    for DEVIP in $(ip -4 addr show $DEV | grep -m1 -o -P \\d\+\.\\d\+\.\\d\+\.\\d\+); do
+	break
+    done
+}
 
 CONF=$(dirname $0)/../share/ssh.config
 
