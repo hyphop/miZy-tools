@@ -1,0 +1,40 @@
+#!/bin/sh
+
+## hyphop ## 
+
+## sunxi fel spi flash info
+
+usbid="1f3a:efe8"
+
+# try sunxi_fel
+
+for sunxi_fel in \
+    $(dirname $0)/../../sunxi-tools/sunxi-fel \
+    ../sunxi-tools/sunxi-fel \
+    sunxi-fel \
+    ""; do
+#    echo "[i] try $sunxi_fel"
+    which "$sunxi_fel" >/dev/null 2>/dev/null && {
+    break
+    }
+done
+
+[ "$sunxi_fel" ] || {
+    echo "[e] try to install sunxi-tools" >&2
+    exit 1
+}
+
+# try to get super user privs
+for sudo in runas sudo ""; do
+    which $sudo 2>/dev/null 1>/dev/null & break
+done
+
+# some clear ?
+sunxi_fel=$(which $sunxi_fel)
+
+cmd="$sunxi_fel -p spiflash-info"
+
+echo "# $cmd">&2
+
+$sudo $cmd
+

@@ -8,11 +8,21 @@ D=$(dirname $0)
 
 [ "$REBOOT" ] || REBOOT=
 
+WRITE_MODE=yes
+burn=image_write_sd
+
 for i in "$@"; do
     case "$i" in
+	-n)
+	NOWRITE=1
+	;;
 	--reboot|-r)
 	REBOOT=-r
 	;;
+	--spi|-s)
+	burn=image_write_spi
+	WRITE_MODE=yes
+    	;;
 	*)
 	[ -s "$i" ] && {
 	    IMG="$i"
@@ -30,14 +40,15 @@ DEV=usb0
 
 [ "$DEVIP" ] || DEVIP=$(cat /tmp/mizy_usb_ip 2>/dev/null)
 [ "$DEVIP" ] || {
-    for DEVIP in $(ip -4 addr show $DEV | grep -m1 -o -P \\d\+\.\\d\+\.\\d\+\.\\d\+); do
-	break
+    for DEVIP in $(ip -4 addr show $DEV | grep -m1 -o -P \\d\+\.\\d\+\.\\d\+); do
+    # may be )
+    DEVIP="$DEVIP.1"
+    break
     done
 }
 
 CONF=$(dirname $0)/../share/ssh.config
 
-burn=image_write_sd
 
 echo "[i] mizy usb ip: $DEVIP" >&2
 
@@ -45,10 +56,17 @@ echo "[i] copy image "$IMG" => ssh root@$DEVIP">&2
 
 scp -F $CONF "$IMG" "$D/$burn" root@$DEVIP:/tmp && {
 
+    [ "$NOWRITE" ] && {
+	echo "[i] OK! no write mode just copy !">&2
+	exit 0
+    }
+
     F="$(basename $IMG)"
     
-    echo "[i] write image '$F'">&2
+    echo "[i] write image by $burn '$F'">&2
 
-    ssh -q -F $CONF root@$DEVIP /tmp/$burn /tmp/$F safe $REBOOT
+    echo "# ssh -q -F $CONF root@$DEVIP /tmp/$burn /tmp/$F $WRITE_MODE $REBOOT"
+    
+    ssh -q -F $CONF root@$DEVIP /tmp/$burn /tmp/$F $WRITE_MODE $REBOOT
 
 }

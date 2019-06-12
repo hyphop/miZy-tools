@@ -1,0 +1,181 @@
+#!/bin/sh
+
+## hyphop ##
+
+## write miZy sd image to SPI flash
+NAME=`basename $0`
+
+#IMG=/tmp/*SPI*.bin
+#IMG="/tmp/*.bin"
+
+BS=40960
+SKIP=0
+
+mtd_part=`grep full /proc/mtd 2>/dev/null`
+
+    for s in $mtd_part; do
+        part_num=${s:3:1} # ok only one char 
+        break
+    done
+
+DEV=/dev/mtdblock$part_num
+
+about() { echo "\
+$NAME
+
+USAGE
+    $NAME [yes] [$IMG] [$DEV]
+
+ABOUT 
+    write miZy (spi|mmc) IMAGE to SPI flash 
+	easy & fast way for write SPI image to flash
+
+NOTE
+
+    generate image on host machine
+
+    cd /tmp/zero_builder/miZy-spi-image-builder
+    img_size=0 img_name=firmwares/mizy_spi_image.bin ./miZy_spi_image_builder
+
+    copy to device
+
+    scp firmwares/mizy_spi_image.bin root@miZy:/tmp
+
+    write
+
+    image_write_spi yes
+
+";
+}
+
+CHECK=1
+for i in $@; do
+
+    case "$i" in
+        yes|write|safe)
+	CHECK=
+        ;;
+	mmc)
+	CHECK=
+	SKIP=1
+	BS=8192
+	;;
+        chk|test|check)
+	CHECK=1
+        ;;
+        -r|--reboot)
+	REBOOT=1
+        ;;
+        *)
+#	            echo "[i] *">&2
+	[ -b "$i" ] && {
+#		    echo "[i] DEV $i">&2
+	    DEV=$i
+	    continue
+	}
+	[ -s "$i" ] && {
+#		    echo "[i] IMAGE $i">&2
+	    img="$i"
+	    continue
+	}
+	echo "[i] READ USAGE: $0 --help">&2
+	exit 1
+        ;;
+    esac
+done
+
+case "$img" in
+    *MMC*)
+	SKIP=1
+	BS=8192
+    ;;
+esac
+
+MMC2SPI=1
+
+[ $img ] || { echo "[e] image not defined">&2; exit 1; } 
+[ -s $img ] || { echo "[e] not found image: $img">&2; exit 1; } 
+[ -e $DEV ] || { echo "[e] not found dev: $dev">&2; exit 1; } 
+
+#cmd="dd bs=$BS if=$img skip=$SKIP | mtd write - full"
+cmd="dd bs=$BS if=$img skip=$SKIP"
+cmd2="$cmd of=$DEV conv=fsync"
+
+
+COUNT=$(stat -c %s $img)
+COUNT=$((COUNT/$BS - $SKIP))
+
+echo "[i] have $COUNT blocks by $BS bytes"<&2
+
+md5_img=$($cmd 2>/dev/null |md5sum)
+md5_img=${md5_img% *}
+
+echo "[i] md5sum $md5_img">&2
+
+[ "$CHECK" ] && {
+    echo "[i] just test mode ">&2
+    echo "[i] READ USAGE: $0 --help">&2
+    exit 0
+}
+
+echo "[i] progress write plz wait!">&2
+
+#eval "time
+#pkill dd
+
+progress_update_sec=14
+progress_update_tik=1
+
+progress(){
+    i=0
+    while [ "1" ] ; do 
+    echo -n "."
+    sleep $progress_update_tik
+    i=$((i+1))
+    [ $i -gt $progress_update_sec ] && {
+	echo ""
+	i=0
+	pkill -USR1 dd
+    }
+    done
+}
+
+progress &
+
+pid=$!
+
+
+echo "# $cmd2">&2
+$cmd2 || {
+    [ $pid -gt 0 ] && kill $pid
+    exit 1
+}
+echo "==WRITE"
+
+echo "[i] plz wait for read & check">&2
+echo "# dd if=$DEV bs=$BS count=$COUNT | md5sum">&2
+
+md5_dev=$(dd if=$DEV bs=$BS count=$COUNT | md5sum )
+md5_dev=${md5_dev% *}
+
+[ $pid -gt 0 ] && kill $pid
+echo ""
+echo "[i] md5 dev $md5_dev">&2
+
+[ "$md5_dev" = "$md5_img" ] && {
+echo "[i] write OK">&2
+
+[ "$REBOOT" ] && {
+    echo "[i] reboot by user">&2
+    reboot
+}
+
+return 0
+
+
+}
+
+echo "[e] write ERROR ">&2
+
+return 1
+

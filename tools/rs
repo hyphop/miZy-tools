@@ -1,0 +1,116 @@
+#!/usr/bin/perl
+
+## hyphop ##
+
+#$USER=$ENV{USER};
+$USER||="root";
+
+$PWD=$ENV{PWD};
+$p=$PWD;
+$conf=",rsync.conf";
+
+#$to = pop @ARGV if $ARGV[$#ARGV] =~ /\@/;
+#$to //= $ENV{server};
+
+%conf;
+
+my  $mizy_ip=`./mizy_up 2>/dev/null`;
+    chomp $mizy_ip;
+
+sub parseconf {
+    warn "parse conf $_[0]\n";
+    open my $f, $_[0];
+    while ( <$f> ) {
+	next if /^#/;
+	$_[1]->{$1} = $' if /(\w+)\s*=/;
+	$_[1]->{$1} =~ s/\s*\n//;
+    }
+    1
+}
+
+@PWD = split '/' => $PWD;
+@P;
+
+for $i (0..10) {
+    $l =pop @PWD;
+    $p.="/..";
+    $_ = "$p/$conf";
+#   warn $_;
+    parseconf($_,\%conf) && last
+	if -f $_;
+    unshift @P, $l;
+    $P=join "/" => @P;
+#   warn $P;
+}
+
+for $v ( sort keys %conf ) { 
+    warn "$v=$conf{$v}\n";
+}
+
+$conf{pref}=$ENV{pref} if defined $ENV{pref};
+
+$RPATH="$conf{pref}/$P";
+
+$conf{host}=$ENV{host} if defined $ENV{host};
+
+
+$to//=$conf{host};
+$to//=$mizy_ip;
+
+our $port;
+if ( $to=~/:/ ) {
+    $to=$`;
+    $port=$';
+}
+
+die "[e] undef destination\n" unless $to;
+
+warn "HOST: $to PREFIX: $conf{pref}";
+
+
+our @FILES;
+our @ARGS;
+our @ARGR;
+
+for (@ARGV) {
+
+    if ( /^\-/ ) {
+	unless (@FILES) {
+	    push @ARGR, $_;
+	} else {
+	    push @ARGS, $_;
+	}
+    } else {
+
+    if ( -f $_ || -d $_ || -l $_ ){
+	push @FILES, $_;
+    } else {
+	die "[e] undef file $_\n";
+    }
+
+    }
+}
+
+die "udef source files\n" unless @FILES;
+
+@cmd = ( qw/rsync --progress --inplace -av/ );
+
+our $CONF="../share/ssh.config";
+
+push @cmd, "-e" => "ssh -F $CONF";
+
+push @cmd, "-e" => "ssh -p 22"  if $port;
+
+push @cmd, @ARGR if @ARGR;
+
+push @cmd, @FILES, "$USER\@$to:\"$RPATH\"" ;
+
+warn "[X] @cmd\n";
+
+#open C, "-|", @cmd;
+#while (<C>){
+#    print $_;
+#}
+
+system @cmd;
+

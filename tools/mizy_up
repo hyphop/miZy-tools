@@ -26,17 +26,20 @@ grep "miZy" /sys/bus/usb/devices/usb?/driver/*/manufacturer | while read l ; do
     DEVIP=${l%:*}
     HOSTIP=${l#$DEVIP:}
     DEVIP=${DEVIP#*:}
-    echo "[i] setup usb network - host: $HOSTIP dev: $DEVIP"
+    echo "[i] setup usb network - host: $HOSTIP dev: $DEVIP" >&2
     cmd="$(which ifconfig) $DEV $HOSTIP netmask 255.255.255.0"
-    echo "# $sudo $cmd"
+    echo "# $sudo $cmd">&2
     $sudo $cmd
 
     ping -c1 $DEVIP  >/dev/null 2>/dev/null || {
 	echo "[w] ping to $DEV error">&2
+	exit 0
     }
 
-    echo "[i] mizy device available via usb IP: $DEVIP"
+    echo "[i] mizy device available via usb IP: $DEVIP" >&2
     printf "$DEVIP" > /tmp/mizy_usb_ip
+
+    echo "$DEVIP"
 
     ## resolver
     ## echo nameserver $DEVIP > /tmp/resolv.conf

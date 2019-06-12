@@ -1,0 +1,79 @@
+#!/bin/sh
+
+## hyphop ## 
+
+[ "$LOOP" ] || LOOP=1
+[ "$LOOP" = "0" ] && LOOP=
+[ "$LOOP" = "no" ] && LOOP=
+
+LOOP=
+
+usbid="1f3a:efe8"
+
+# try sunxi_fel
+
+for sunxi_fel in \
+    $(dirname $0)/../../sunxi-tools/sunxi-fel \
+    ../sunxi-tools/sunxi-fel \
+    sunxi-fel \
+    ""; do
+#    echo "[i] try $sunxi_fel"
+    which "$sunxi_fel" 1>/dev/null 2>/dev/null && {
+    break
+    }
+done
+
+[ "$sunxi_fel" ] || {
+    echo "[e] try to install sunxi-tools" >&2
+    exit 1
+}
+
+# try to get super user privs
+for sudo in runas sudo ""; do
+    which $sudo 2>/dev/null 1>/dev/null & break
+done
+
+# some clear ?
+sunxi_fel=$(which $sunxi_fel)
+
+IMG="$1"
+
+[ -s "$IMG" ] || {
+    echo "[w] '$IMG' not found !">&2
+    exit 0
+}
+
+case "$IMG" in
+    *MMC*)
+    IMG2="/tmp/mizy_image.SPI.bin"
+    dd if=$IMG bs=8192 skip=1 2>/dev/null > $IMG2
+    echo "[i] convert MMC 2 SPI image > $IMG2"
+    IMG="$IMG2"
+    ;;
+esac
+
+cmd="$sunxi_fel -p spiflash-write 0 $(realpath $IMG)"
+
+echo "[i] loop mode is $LOOP">&2
+
+echo "[i] ready to write image $IMG => SPI (FEL mode)">&2
+
+while [ "1" ]; do
+
+	grep -q "1f3a" /sys/bus/usb/devices/*/idVendor && \
+	grep -q "efe8" /sys/bus/usb/devices/*/idProduct || {
+		printf "[i] $(date) WAIT usb device id $usbid\r"
+		sleep 1
+		continue;
+	}
+
+    echo "# $cmd">&2
+
+    $sudo $cmd
+
+    [ "$LOOP" ] || break
+
+    sleep 1
+
+done
+

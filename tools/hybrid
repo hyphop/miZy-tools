@@ -17,9 +17,14 @@ $NAME
 
 USAGE
 
+    $NAME [IMAGE_FILE] - display image info
+
     $NAME [IMAGE_FILE] [in|read|write|out|env|list|offset|info] [part_name] [OUT]
 
     $NAME [IMAGE_FILE] [strip|write|trunk|split] [part_name] [OUT] [OUT..]
+
+    $NAME [IMAGE_FILE] extract - extract images
+
 
     [DEV=] $NAME ...
 
@@ -285,7 +290,9 @@ case $MODE in
 	EXTRACTED="$IMG.ext"
 
 	[ -d "$EXTRACTED" ] || mkdir -p "$EXTRACTED"
-	ln -sf $EXTRACTED extracted
+	ln2="$(dirname $EXTRACTED)/extracted"
+	rm $ln2
+	ln -sf "$(basename $EXTRACTED)" $ln2
 
 	n=0
 

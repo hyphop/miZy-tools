@@ -5,9 +5,33 @@
 # FEL / SPL boot via usb-otg 
 # http://linux-sunxi.org/FEL/USBBoot
 
-[ "$LOOP" ] || LOOP=1
+#
+
+# "$LOOP" ] || LOOP=1
 [ "$LOOP" = "0" ] && LOOP=
 [ "$LOOP" = "no" ] && LOOP=
+
+D="$(dirname $0)"
+
+IMG=
+
+for a in "$@" ; do
+    case $a in
+	*.bin)
+	[ -s "$a" ] && {
+	    IMG="$a"
+	}
+	;;
+	--loop|-l)
+	    LOOP=1
+	;;
+	--noloop|-n)
+	    LOOP=
+	;;
+    esac
+done
+
+# addr parts
 
 scriptaddr=0x43100000
 envaddr=0x43101000
@@ -16,6 +40,8 @@ kernel_addr_r=0x42000000
 ramdisk_addr_r=0x43300000
 fdt_addr_r=0x43000000
 fdt_addr_lzma=0x43200000
+
+## required files for boot 
 
 help="
 find ../bin/extracted/* 
@@ -28,7 +54,20 @@ find ../bin/extracted/*
 ../bin/extracted/6-user
 "
 
-DIR=bin/extracted
+[ "$IMG" ] && {
+
+echo "[i] prepare mizy image for load">&2
+
+$D/hybrid "$IMG" extract || {
+    exit 1
+}
+
+    DIR="$(dirname $IMG)/extracted"
+    echo "[i] extracted OK to $DIR">&2
+
+}
+
+[ "$DIR" ] || DIR=bin/extracted
 
 fdt=$DIR/3-dtb
 uboot=$DIR/1-uboot
@@ -44,7 +83,7 @@ splash=hyphop2r.png.b.raw.i2c
 splash=miZero.128x64.i2c
 splash=,out/splash.bin
 
-envfile="share/boot.fel.env"
+envfile="$D/../share/boot.fel.env"
 
 usbid="1f3a:efe8"
 
@@ -77,10 +116,11 @@ dd if=$uboot bs=$UBOOT_SIZE count=1 of=$uboot.trunc
 
 uboot="$uboot.trunc"
 
-# try sunxi_fel
+# try to find sunxi_fel
 
 for sunxi_fel in \
     ../sunxi-tools/sunxi-fel \
+    "$D/../../sunxi-tools/sunxi-fel" \
     sunxi-fel \
     ""; do
 #    echo "[i] try $sunxi_fel"
@@ -101,6 +141,7 @@ done
 
 # some clear ?
 sunxi_fel=$(which $sunxi_fel)
+
 
 cmd="$sunxi_fel -p -v uboot $uboot	\
              write ${scriptaddr} $script	\
@@ -126,7 +167,14 @@ while [ "1" ]; do
 
 #   lsusb | grep $usbid 1>/dev/null 2>/dev/null || continue;
 
-    echo "FEL CMD: " $cmd
+    # echo "# $cmd">&2
+
+    echo "#">&2
+    for c in $cmd; do
+	printf "$c " >&2
+    done
+    echo "">&2
+
 
     $sudo $cmd
 
