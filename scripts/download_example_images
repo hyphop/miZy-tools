@@ -1,0 +1,36 @@
+#!/bin/sh
+
+## hyphop ##
+
+D="$(dirname $0)"
+D2=$D/../tmp
+
+BASE=https://github.com/hyphop/miZy-images-collection/releases/download/examples
+
+IMAGES="
+orange_pi_zero_miZy-tinycam.MMC.hybrid.8M.8192.bin.gz
+"
+echo "[i] images source $BASE">&2
+echo "[i] download to $D2">&2
+i=1
+for f in $IMAGES; do
+
+
+    f2="$D2/${f%.*}"
+
+    [ -s "$f2" ] && {
+	echo "[$i] downloaded $f2 already">&2
+	continue
+    }
+
+    echo "[$i] get image $f">&2
+
+    curl -jkL "$BASE/$f" "-o$D2/$f" -C- -#
+
+    echo "[$i] unpack image $f">&2
+
+    gzip -dc "$D2/$f" > "$f2"
+
+    i=$((i+1))
+
+done

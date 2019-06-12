@@ -1,8 +1,7 @@
 logs
 *.notready
-tmp/*
-out/*
 bin/*
+tmp/*
 git_*
 #syncit*
 rel

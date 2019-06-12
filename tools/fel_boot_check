@@ -1,0 +1,64 @@
+#!/bin/sh
+
+## hyphop ##
+
+ORG="fel_boot_check"
+NAME=`basename $0`
+
+[ "$dev" = "" ] && dev=/dev/mmcblk0
+
+dst=${NAME#$ORG}
+dst=${dst#_}
+[ "$dst" ] || dst="mmc"
+
+tmp_act=/tmp/fel_boot.$dst.bin
+
+bs=8192
+mmc_offset=1 # 1 block = 8192 bytes
+
+[ "$dst" = "spi" ] && dev=/dev/mtdblock0
+[ "$dst" ] || dst="mmc"
+
+[ "$dst" = "spi" ] && { 
+    dev=/dev/mtdblock0
+    mmc_offset=0
+}
+
+about() { echo "\
+$NAME
+
+ABOUT
+    check spl FEL mode boot loader on mmc (spi) 
+
+USAGE
+    $NAME
+
+PATHS
+    device: $dev ($dst)
+
+SEE ALSO
+    fel_boot_write
+"
+}
+
+. /opt/help_inc 
+
+a="bs=$bs count=1"
+
+cmd="dd if=$dev $a skip=$mmc_offset of=$tmp_act"
+echo $cmd
+$cmd 2>$tmp_act.log
+
+export tmp=/tmp/fel_boot.ok.bin
+
+`dirname $0`/fel_boot_write_mmc yes test noback
+
+md5sum $tmp
+md5sum $tmp_act
+#no 0829f71740aab1ab98b33eae21dee122
+
+diff $tmp $tmp_act && { echo "OK $dev have already good fel boot loader"; exit 0; }
+
+echo "NO! its different" >&2
+
+exit 1

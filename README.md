@@ -29,16 +29,14 @@ git clone https://github.com/hyphop/miZy-tools
 boot any mizy images without write it to storage sd/mmc/spi just via usb FEL mode
 yeah!!! its cool, quick and very easy!
 
-```
-# extract any downloaded mizy image
 
-cd tmp
-wget IMAGE
-cd ..
+## downloaded examples mizy image
 
-# boot this image via FEL mode (without storage write)
+`script/download_example_images`
 
-tools/fel_full_boot tmp/mizy_image
+## boot some image via FEL mode (without storage write)
+
+`tools/fel_boot orange_pi_zero_miZy-tinycam.MMC.hybrid.8M.8192.bin`
 
 # setup usb network ( if not dhcp auto configured by system )
 
@@ -60,7 +58,6 @@ FEL mode activation
 + on active mizy `fel_boot_write yes` - setup FEL boot from sd
 + if u have any bootable source u can write it by zero first 8192 bytes, or just remove it
 + sunxi-fel source https://github.com/hyphop/sunxi-tools
-
 
 # About miZy
 

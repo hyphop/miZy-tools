@@ -1,0 +1,20 @@
+#!/bin/sh
+
+## hyphop ##
+
+## simple fel mode activator ))))
+## but be sure need for all bootable device strorage ( SPI / mmc / SD )
+
+##
+
+[ "$dev" = "$1" ]
+[ "$dev" = "" ] && dev=/dev/mmcblk0
+
+[ -b "$dev" ] || {
+    echo "[e] $dev is not block dev">&2
+}
+
+## just write header
+
+dd if=/dev/zero bs=8192 count=2 of=$dev
+
