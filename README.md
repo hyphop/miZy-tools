@@ -49,6 +49,9 @@ tools/mizy_shell
 # ok!
 
 ```
+# activate FEL mode on mmc bootable active mizy device
+
+`toos/mizy_shell /opt/fel_boot_write_mmc yes`
 
 # FEL mode
 

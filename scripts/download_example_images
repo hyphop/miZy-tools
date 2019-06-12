@@ -9,7 +9,9 @@ BASE=https://github.com/hyphop/miZy-images-collection/releases/download/examples
 
 IMAGES="
 orange_pi_zero_miZy-tinycam.MMC.hybrid.8M.8192.bin.gz
+orange_pi_zero_miZy-tiny.MMC.hybrid.8M.8192.bin.gz
 "
+
 echo "[i] images source $BASE">&2
 echo "[i] download to $D2">&2
 i=1

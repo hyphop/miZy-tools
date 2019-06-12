@@ -7,7 +7,7 @@
 DEV=usb0
 D="$(dirname $0)"
 
-[ "$DEVIP" ] || DEVIP="$($D/mizy_up)"
+[ "$DEVIP" ] || DEVIP="$($D/mizy_up 2>/dev/null)"
 
 [ "$DEVIP" ] || {
     for DEVIP in $(ip -4 addr show $DEV | grep -m1 -o -P \\d\+\.\\d\+\.\\d\+); do
@@ -24,8 +24,8 @@ echo "[i] mizy usb ip: $DEVIP" >&2
 
 echo "# ssh -F $CONF root@$DEVIP">&2
 
-ssh -q -F $CONF root@$DEVIP || {
+ssh -q -F $CONF root@$DEVIP "$@" || {
 
-ssh -q -F $CONF -p 22222 root@$DEVIP 
+ssh -q -F $CONF -p 22222 root@$DEVIP "$@"
 
 }

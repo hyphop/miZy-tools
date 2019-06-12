@@ -1,0 +1,36 @@
+#!/bin/sh
+
+## hyphop ##
+
+## what a mad script )))
+
+#../tools/mizy_shell /opt/reboot_after 1 && echo "sleep and wait" && sleep 1 && ../tools/wait_device
+
+echo "
+(
+sleep 1;
+reboot_nowait
+)&
+echo wait_reboot
+exit 
+" | ../tools/mizy_shell
+i=0
+
+echo "[i] $(date) still wait reboot"
+
+while [ "1" ] ;do 
+    grep -q "miZy" /sys/bus/usb/devices/usb?/driver/*/manufacturer || break
+    sleep 1
+done
+
+echo "[i] $(date) ok device restarted"
+
+while [ "1" ] ;do 
+    grep "miZy" /sys/bus/usb/devices/usb?/driver/*/manufacturer && break
+    i=$((i+1))
+    echo "[i] wait $i sec">&2
+    sleep 1
+done
+
+echo "[i] $(date) just a $i sec" >&2
+echo $i

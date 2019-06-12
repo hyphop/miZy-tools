@@ -22,6 +22,10 @@ for i in "$@"; do
 	--spi|-s)
 	burn=image_write_spi
 	WRITE_MODE=yes
+	;;
+	--mmc|-m)
+	burn=image_write_mmc
+	WRITE_MODE=yes
     	;;
 	*)
 	[ -s "$i" ] && {

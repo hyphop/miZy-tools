@@ -1,0 +1,188 @@
+#!/bin/sh
+
+## hyphop ##
+
+## !!! dirty code !!!
+
+## write miZy sd image to SD or MMC card
+
+NAME=`basename $0`
+
+sd=
+mmc=
+
+for i in 0 1 ; do
+    t="/sys/block/mmcblk$i/device/type"
+    [ -f $t ] && {
+    echo ">$t"
+    type=`cat $t`
+    case $type in
+	SD)
+	sd=/dev/mmcblk$i
+	;;
+	MMC)
+	mmc=/dev/mmcblk$i
+	;;
+    esac
+    }
+done
+
+[ "$type" ] || {
+    echo "[e] mmc not found">&2
+    exit 1
+}
+
+type="MMC"
+
+case $NAME in
+    *_sd)
+    DEV=$sd
+    ;;
+    *_mmc)
+    DEV=$mmc
+    ;;
+esac
+
+IMG=/tmp/*$type*bin
+BS=8192
+
+about() { echo "\
+$NAME
+
+USAGE
+    $NAME [yes|safe|spi] [$IMG] [$DEV]
+
+ABOUT 
+    write miZy sd | hybrid IMAGE to SD
+
+EXAMPLE
+    image_write_sd yes  # write mmc image 
+    image_write_sd safe # same write mmc image 
+			# but without rewrite first 8192 bytes header
+    seek=1 image_write_sd yes # write spi/mmc hybrid image 
+    .. same as ..
+    image_write_sd spi
+
+NOTE
+
+    # generate image on host machine
+
+    cd /tmp/zero_builder/miZy-spi-image-builder
+    MMC=1 img_size=16M img_name=firmwares/mizy_mmc_image.bin ./miZy_spi_image_builder
+
+    # copy to device
+
+    scp firmwares/mizy_mmc_image.bin root@miZy:/tmp
+
+    # write
+
+    image_write_sd yes
+
+";
+}
+
+## ungz block
+
+[ -s $IMG.gz ] && {
+	gz=`echo $IMG.gz`
+	img=${gz%.gz}
+	echo "[i] found packed image: $gz" >&2
+	echo "[i] => $img"
+	gzip -dc "$gz" > "$img"
+}
+
+echo "[i] scan image => $IMG" >&2
+
+[ "$img" = "" ] && img=`echo $IMG`
+[ "$dev" = "" ] && dev=$DEV
+
+CHECK=1
+
+for i in $@; do
+
+#    echo "[i] args: $i">&2
+
+
+	case "$i" in
+	    yes|write)
+		CHECK=
+	    ;;
+	    chk|test|check)
+		CHECK=1
+	    ;;
+	    -r|--reboot)
+		REBOOT=1
+	    ;;
+	    spi)
+		CHECK=
+		echo "[i] seek 8192 header">&2
+		seek="seek=1"
+	    ;;
+	    safe)
+		CHECK=
+		echo "[i] safe 8192 header">&2
+		seek="skip=1 seek=1"
+	    ;;
+	    *)
+#	            echo "[i] *">&2
+		[ -b "$i" ] && {
+#		    echo "[i] DEV $i">&2
+		    dev=$i
+		    continue
+		}
+		[ -s "$i" ] && {
+#		    echo "[i] IMAGE $i">&2
+		    img="$i"
+		    continue
+		}
+		echo "[i] READ USAGE: $0 --help">&2
+		exit 1
+	    ;;
+	esac
+done
+
+
+[ -s $img ] || { echo "[e] not found image: $img">&2; exit 1; } 
+[ "$dev" ]  || { echo "[e] not found $type dev => /dev/mmcblk* ">&2; exit 1; } 
+[ -b $dev ] || { echo "[e] not $type device : $dev">&2; exit 1; } 
+
+grep $dev /proc/mounts && { 
+    /opt/automount umount
+    grep $dev /proc/mounts && { 
+	echo "[e] used dev: $dev">&2; exit 1;
+    }
+} 
+
+/sbin/losetup -a | grep $dev && {
+    echo "[w] used dev: $dev">&2
+    echo "[i] try this one before">&2
+    echo "# overlay umount" >&2
+    exit 1
+}
+
+
+
+cmd="dd of=$dev bs=$BS $seek if=$img"
+
+echo "# $cmd">&2
+
+[ "$CHECK" ] && {
+    echo "[i] just test mode ">&2
+    echo "[i] READ USAGE: $0 --help">&2
+    exit 0
+}
+
+echo "==WRITE"
+
+$cmd || {
+    exit 1
+}
+
+sync
+
+
+[ "$REBOOT" ] && {
+    echo "[i] reboot by user">&2
+    reboot
+}
+

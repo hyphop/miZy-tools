@@ -1,0 +1,22 @@
+#!/bin/sh
+
+## hyphop ##
+
+D="$(dirname $0)"
+
+i=0
+DEVIP=
+while [ "1" ] ; do
+    DEVIP=$($D/mizy_up 2>/dev/null) && break
+    echo "[i] wait $i sec">&2
+    i=$((i+1))
+    sleep 1
+done
+
+#echo "[i] mizy detected $DEVIP">&2
+
+export DEVIP=$DEVIP
+
+"$D/mizy_shell"
+
+
