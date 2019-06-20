@@ -1,0 +1,32 @@
+#!/bin/sh
+
+## hyphop ##
+
+LOOP=$1
+DELAY=1
+
+[ "$LOOP" = "0" ] && LOOP=
+
+while [ "1" ] ; do
+
+grep "miZy" /sys/bus/usb/devices/usb?/driver/*/manufacturer | while read l ; do
+
+    echo "[i] $l">&2
+    l=${l#*:}
+    DEVIP=${l%:*}
+    HOSTIP=${l#$DEVIP:}
+    DEVIP=${DEVIP#*:}
+    echo "[i] mizy device found - available as host: $HOSTIP dev: $DEVIP" >&2
+    LOOP=
+    break
+
+done
+
+    [ "$LOOP" ] || break
+
+    printf "[$(date)] scan mizy device\r">&2
+    sleep $DELAY
+    
+done
+#:miZy:172.22.1.1:172.22.1.2
+

@@ -43,6 +43,8 @@ fdt_addr_lzma=0x43200000
 
 ## required files for boot 
 
+echo "[i] boot miZy image in FEL mode: $IMG">&2
+
 help="
 find ../bin/extracted/* 
 ../bin/extracted/0-header_mmc
@@ -63,7 +65,7 @@ $D/hybrid "$IMG" extract || {
 }
 
     DIR="$(dirname $IMG)/extracted"
-    echo "[i] extracted OK to $DIR">&2
+    echo "[i] extracted to $DIR">&2
 
 }
 
@@ -89,6 +91,7 @@ usbid="1f3a:efe8"
 
 s=0
 
+echo "[i] check all parts">&2
 for c in  $uboot  $script $initrd  $kernel  $fdt  $envfile; do
 	[ -f "$c" ] || {
 		echo "[e] $c - file not found"
@@ -105,14 +108,15 @@ for c in  $uboot  $script $initrd  $kernel  $fdt  $envfile; do
 	S=$(stat -L -c%s $c)
 	s=$((s+S))
 
-	echo ">>$c\t$S bytes"
+	echo "[i] find $c\t$S bytes"
 
 done
-	echo "=========\nUPLOAD: $s"
+	echo "[i] ==================> TOLAL FOR UPLOAD: $s"
 
 ## need remove gurb from tail 
 
-dd if=$uboot bs=$UBOOT_SIZE count=1 of=$uboot.trunc
+# temp hack
+dd if=$uboot bs=$UBOOT_SIZE count=1 2>/dev/null of=$uboot.trunc
 
 uboot="$uboot.trunc"
 
@@ -154,7 +158,9 @@ cmd="$sunxi_fel -p -v uboot $uboot	\
 #             write ${splash_addr} $splash	\
 
 
-echo "[i] loop mode is $LOOP">&2
+[ "$LOOP" ] || LOOPMODE="disabled"
+
+echo "[i] loop mode is $LOOPMODE">&2
 
 while [ "1" ]; do
 

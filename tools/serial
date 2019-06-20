@@ -3,8 +3,14 @@
 ## hyphop ##
 
 ## usage serial UART via screen
+## USAGE
+## 	serial [baudrate]
 
-B=115200
+
+WAIT=2
+B=$1
+
+[ "$B" ] || B=115200
 
 for dev in \
     /dev/serial/by-id/usb-Prolific*-port0 \
@@ -39,13 +45,16 @@ done
 
 echo "[i] use $dev">&2
 
-
 while [ "1" ] ; do 
+
     cmd="$sudo $(which screen) $dev $B"
     echo "# $cmd">&2
     echo "# stop and exit screen by Crtl+a Ctrl+K y & Crtl + C - stop loop">&2
-    echo "# wait 5 sec for read this and run">&2
-    sleep 5
+    echo "# wait $WAIT sec for read this and run">&2
+
+    sleep $WAIT
+
     $cmd
+
 done
 

@@ -34,3 +34,5 @@ done
 
 echo "[i] $(date) just a $i sec" >&2
 echo $i
+
+../tools/mizy_shell /opt/loadtime

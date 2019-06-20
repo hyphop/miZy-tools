@@ -299,7 +299,7 @@ case $MODE in
 	[ "$MMC_OFF" -gt 0 ] && {
 	    echo "[i] extract mmc header">&2
 	    cmd="dd if=$DEV of="$EXTRACTED/$n-header_mmc" bs=$BS count=1"
-	    echo "$cmd"
+#	    echo "$cmd"
 	    $cmd 2>$LOG
 	}
 
@@ -312,7 +312,7 @@ case $MODE in
 			echo "[i] extract part $p $v $o" 1>&2
 			skip=$((MMC_OFF+o))
 			cmd="dd if=$DEV of="$EXTRACTED/$n-$p" bs=$BS skip=$((skip/$BS)) count=$((v/$BS))"
-			echo $cmd
+#			echo $cmd
 			$cmd 2>$LOG
 			#exit 0
 	done

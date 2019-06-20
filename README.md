@@ -29,7 +29,6 @@ git clone https://github.com/hyphop/miZy-tools
 boot any mizy images without write it to storage sd/mmc/spi just via usb FEL mode
 yeah!!! its cool, quick and very easy!
 
-
 ## downloaded examples mizy image
 
 `script/download_example_images`
