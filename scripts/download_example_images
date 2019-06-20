@@ -29,6 +29,8 @@ for f in $IMAGES; do
 
     echo "[$i] get image $f">&2
 
+    echo "# url $BASE/$f">&2
+
     curl -jkL "$BASE/$f" "-o$D2/$f" -C- -#
 
     echo "[$i] unpack image $f">&2

@@ -19,6 +19,7 @@ for dev in \
     ""; do
 
     [ -c $dev ] && {
+	echo "[i] usb serial: $dev">&2
 	break
     }
 
@@ -49,7 +50,7 @@ while [ "1" ] ; do
 
     cmd="$sudo $(which screen) $dev $B"
     echo "# $cmd">&2
-    echo "# stop and exit screen by Crtl+a Ctrl+K y & Crtl + C - stop loop">&2
+    echo "# Crtl+A -> Shift+K -> y : exit from screen & Crtl+C - stop loop">&2
     echo "# wait $WAIT sec for read this and run">&2
 
     sleep $WAIT
