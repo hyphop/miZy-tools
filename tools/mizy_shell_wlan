@@ -1,0 +1,21 @@
+#!/bin/sh
+
+## hyphop ##
+
+# simple automate ssh shell access for mizy via wlan
+
+DEVIP=172.27.0.1
+
+sudo route add $DEVIP dev wlan0
+
+CONF=$(dirname $0)/../share/ssh.config
+
+echo "[i] mizy usb ip: $DEVIP" >&2
+
+echo "# ssh -F $CONF root@$DEVIP">&2
+
+ssh -q -F $CONF root@$DEVIP "$@" || {
+
+ssh -q -F $CONF -p 22222 root@$DEVIP "$@"
+
+}
