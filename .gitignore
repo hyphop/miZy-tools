@@ -5,3 +5,4 @@ tmp/*
 git_*
 #syncit*
 rel
+*.bin
